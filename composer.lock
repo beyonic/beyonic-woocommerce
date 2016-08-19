@@ -1,0 +1,66 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "90820f6c969bb7dea3e6ba44196b0656",
+    "content-hash": "d9ea632397e928062f2b37903b277ee5",
+    "packages": [
+        {
+            "name": "beyonic/beyonic-php",
+            "version": "0.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/beyonic/beyonic-php.git",
+                "reference": "96393303f0da69b62aae124836a5c112bccbd7dd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/beyonic/beyonic-php/zipball/96393303f0da69b62aae124836a5c112bccbd7dd",
+                "reference": "96393303f0da69b62aae124836a5c112bccbd7dd",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": ">=5.2"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "lib/Beyonic/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Beyonic",
+                    "homepage": "http://beyonic.com"
+                }
+            ],
+            "description": "Beyonic PHP Library",
+            "homepage": "http://beyonic.com",
+            "keywords": [
+                "Mobile Payments",
+                "api",
+                "beyonic",
+                "mobile money",
+                "mpesa"
+            ],
+            "time": "2016-04-18 14:38:11"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}

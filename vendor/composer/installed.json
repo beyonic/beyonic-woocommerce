@@ -1,0 +1,51 @@
+[
+    {
+        "name": "beyonic/beyonic-php",
+        "version": "0.0.3",
+        "version_normalized": "0.0.3.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/beyonic/beyonic-php.git",
+            "reference": "96393303f0da69b62aae124836a5c112bccbd7dd"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/beyonic/beyonic-php/zipball/96393303f0da69b62aae124836a5c112bccbd7dd",
+            "reference": "96393303f0da69b62aae124836a5c112bccbd7dd",
+            "shasum": ""
+        },
+        "require": {
+            "ext-curl": "*",
+            "ext-json": "*",
+            "ext-mbstring": "*",
+            "php": ">=5.2"
+        },
+        "time": "2016-04-18 14:38:11",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "classmap": [
+                "lib/Beyonic/"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Beyonic",
+                "homepage": "http://beyonic.com"
+            }
+        ],
+        "description": "Beyonic PHP Library",
+        "homepage": "http://beyonic.com",
+        "keywords": [
+            "Mobile Payments",
+            "api",
+            "beyonic",
+            "mobile money",
+            "mpesa"
+        ]
+    }
+]

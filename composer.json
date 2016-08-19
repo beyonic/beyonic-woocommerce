@@ -1,0 +1,5 @@
+{
+  "require": {
+    "beyonic/beyonic-php": "*"
+  }
+}
