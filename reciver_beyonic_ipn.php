@@ -14,10 +14,14 @@ if (!empty($responce)) {
     $hook = $responce->hook;
     $event = $hook->event;
     if ($event == 'collection.received') {
-        $order_id = $data->metadata->order_id;
-        $state = $data->status;
+        //get order id from collection request
+        $wc_beyonic = new WC_Gateway_Beyonic();
+        $wc_beyonic->authorize_beyonic();
+        $collection_request = Beyonic_Collection_Request::get($data->collection_request);
+        $order_id = $collection_request->metadata->order_id;
+        $status = $data->status;
         $order = new WC_Order($order_id);
-        if ($state == "successful") {
+        if ($status == "successful") {
             global $woocommerce;
             $order->update_status('processing');
         } else {
