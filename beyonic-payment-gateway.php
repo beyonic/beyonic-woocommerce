@@ -111,12 +111,7 @@ function beyonic() {
             global $woocommerce, $wpdb;
             $order = new WC_Order($order_id);
 
-            if ($this->test_mode) {
-                Beyonic::setApiKey($this->test_api_key);
-            } else {
-                Beyonic::setApiKey($this->live_api_key);
-            }
-
+            $this->authorize_beyonic();
 
             if (!empty($_POST['billing_first_name'])) {
                 $first_name = $_POST['billing_first_name'];
@@ -186,6 +181,22 @@ function beyonic() {
                     You're in <strong>test mode</strong>   
                 </div>
                 <?php
+            }
+        }
+        
+        /**
+         * Set authorization to Beyonic API
+         */
+        function authorize_beyonic()
+        {
+            $this->test_api_key = $this->get_option('test_api_key');
+            $this->live_api_key = $this->get_option('live_api_key');
+            $this->description = $this->get_option('description');
+            $this->test_mode = $this->get_option('test_mode');
+            if ($this->test_mode) {
+                Beyonic::setApiKey($this->test_api_key);
+            } else {
+                Beyonic::setApiKey($this->live_api_key);
             }
         }
 
