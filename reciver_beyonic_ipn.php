@@ -15,9 +15,9 @@ if (!empty($responce)) {
     $event = $hook->event;
     if ($event == 'collection.recieved') {
         $order_id = $data->metadata->order_id;
-        $state = $data->state;
+        $state = $data->status;
         $order = new WC_Order($order_id);
-        if ($state == "completed") {
+        if ($state == "successful") {
             global $woocommerce;
             $order->update_status('processing');
         } else {
