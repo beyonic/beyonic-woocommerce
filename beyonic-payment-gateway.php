@@ -189,10 +189,6 @@ function beyonic() {
          */
         function authorize_beyonic()
         {
-            $this->test_api_key = $this->get_option('test_api_key');
-            $this->live_api_key = $this->get_option('live_api_key');
-            $this->description = $this->get_option('description');
-            $this->test_mode = $this->get_option('test_mode');
             if ($this->test_mode) {
                 Beyonic::setApiKey($this->test_api_key);
             } else {
