@@ -1,11 +1,6 @@
 <?php
-
-//error_reporting(E_ALL);
-//ini_set('display_errors', TRUE);
-//ini_set('display_startup_errors', TRUE);
 $parse_uri = explode('wp-content', $_SERVER['SCRIPT_FILENAME']);
 require_once( $parse_uri[0] . 'wp-load.php');
-require_once('vendor/beyonic/beyonic-php/lib/Beyonic.php');
 
 global $woocommerce;
 $responce = $_REQUEST;
