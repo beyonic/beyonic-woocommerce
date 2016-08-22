@@ -13,7 +13,7 @@ if (!empty($responce)) {
     $data = $responce->data;
     $hook = $responce->hook;
     $event = $hook->event;
-    if ($event == 'collection.recieved') {
+    if ($event == 'collection.received') {
         $order_id = $data->metadata->order_id;
         $state = $data->status;
         $order = new WC_Order($order_id);
