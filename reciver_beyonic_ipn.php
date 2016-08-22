@@ -8,18 +8,14 @@ require_once( $parse_uri[0] . 'wp-load.php');
 require_once('vendor/beyonic/beyonic-php/lib/Beyonic.php');
 
 global $woocommerce;
-$responce = $_REQUEST;
+$responce = json_decode(file_get_contents("php://input"));
 if (!empty($responce)) {
-    $data = $responce['data'];
-    $hook = $responce['hook'];
-    $finalData = stripslashes($data);
-    $finalHook = stripslashes($hook);
-    $data_array = json_decode($finalData);
-    $hook_array = json_decode($finalHook);
-    $event = $hook_array->event;
+    $data = $responce->data;
+    $hook = $responce->hook;
+    $event = $hook->event;
     if ($event == 'collection.recieved') {
-        $order_id = $data_array->metadata->order_id;
-        $state = $data_array->state;
+        $order_id = $data->metadata->order_id;
+        $state = $data->state;
         $order = new WC_Order($order_id);
         if ($state == "completed") {
             global $woocommerce;
