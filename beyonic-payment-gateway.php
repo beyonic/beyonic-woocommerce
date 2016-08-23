@@ -38,8 +38,7 @@ function beyonic() {
             $this->init_settings();
             // Define user set variables
             $this->title = "Beyonic Payments";
-            $this->test_api_key = $this->get_option('test_api_key');
-            $this->live_api_key = $this->get_option('live_api_key');
+            $this->live_api_key = $this->get_option('api_key');
             $this->description = $this->get_option('description');
             $this->test_mode = $this->get_option('test_mode');
             $this->beyonic_api_version = 'v1';
@@ -58,31 +57,24 @@ function beyonic() {
                 'enabled' => array(
                     'title' => __('Enable/Disable', 'woocommerce'),
                     'type' => 'checkbox',
-                    'label' => __('Enable the Start gateway', 'woocommerce'),
+                    'label' => __('Enable the Beyonic gateway', 'woocommerce'),
                     'default' => 'yes'
                 ),
                 'description' => array(
                     'title' => __('Description', 'woocommerce'),
                     'type' => 'text',
-                    'description' => __('This is the description the user sees during checkout.', 'woocommerce'),
+                    'description' => __('', 'woocommerce'),
                     'default' => __('Pay for your items with beyonic', 'woocommerce')
                 ),
-                'test_api_key' => array(
-                    'title' => __('Test Api Key', 'woocommerce'),
+                'api_key' => array(
+                    'title' => __('Api Key', 'woocommerce'),
                     'type' => 'text',
                     'description' => __('Please enter your test open key (you can get it from your Beyonic).', 'woocommerce'),
                     'default' => '',
                     'desc_tip' => true,
                     'placeholder' => ''
                 ),
-                'live_api_key' => array(
-                    'title' => __('Live Api Key', 'woocommerce'),
-                    'type' => 'text',
-                    'description' => __('Please enter your live open key (you can get it from your Beyonic).', 'woocommerce'),
-                    'default' => '',
-                    'desc_tip' => true,
-                    'placeholder' => ''
-                ),
+            
                 'test_mode' => array(
                     'title' => __('Test mode', 'woocommerce'),
                     'type' => 'checkbox',
@@ -166,8 +158,6 @@ function beyonic() {
                     'redirect' => $this->get_return_url($order)
                 );
             } catch (Exception $exc) {
-                pr($exc);
-                die;
                 echo $exc->getTraceAsString();
             }
         }
@@ -205,7 +195,7 @@ function beyonic() {
             Beyonic::setApiVersion($this->beyonic_api_version);
 
             if ($this->test_mode) {
-                Beyonic::setApiKey($this->test_api_key);
+                Beyonic::setApiKey($this->live_api_key);
             } else {
                 Beyonic::setApiKey($this->live_api_key);
             }
