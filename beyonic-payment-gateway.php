@@ -24,8 +24,6 @@ function beyonic() {
     if (class_exists('WC_Gateway_Beyonic'))
         return;
 
-
-  
     class WC_Gateway_Beyonic extends WC_Payment_Gateway {
 
         public function __construct() {
@@ -38,9 +36,8 @@ function beyonic() {
             $this->init_settings();
             // Define user set variables
             $this->title = "Beyonic Payments";
-            $this->live_api_key = $this->get_option('api_key');
+            $this->api_key = $this->get_option('api_key');
             $this->description = $this->get_option('description');
-            $this->test_mode = $this->get_option('test_mode');
             $this->beyonic_api_version = 'v1';
             $this->ipn_url = plugin_dir_url(__FILE__) . "reciver_beyonic_ipn.php";
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
@@ -73,13 +70,6 @@ function beyonic() {
                     'default' => '',
                     'desc_tip' => true,
                     'placeholder' => ''
-                ),
-            
-                'test_mode' => array(
-                    'title' => __('Test mode', 'woocommerce'),
-                    'type' => 'checkbox',
-                    'label' => __('Enable Test mode', 'woocommerce'),
-                    'default' => 'no'
                 )
             );
         }
@@ -107,8 +97,8 @@ function beyonic() {
         function process_payment($order_id) {
             global $woocommerce, $wpdb;
             $order = new WC_Order($order_id);
-
-            $this->authorize_beyonic();
+            Beyonic::setApiVersion($this->beyonic_api_version);
+            Beyonic::setApiKeypiKey($this->api_key);
 
             if (!empty($_POST['billing_first_name'])) {
                 $first_name = $_POST['billing_first_name'];
@@ -176,28 +166,6 @@ function beyonic() {
             // Description of payment method from settingsp
             if ($this->description) {
                 echo "<p>" . $this->description . "</p>";
-            }
-            // Are we in test mode?
-            if ($this->test_mode == 'yes') {
-                ?>
-                <div style="background-color:yellow;">
-                    You're in <strong>test mode</strong>   
-                </div>
-                <?php
-            }
-        }
-        
-        /**
-         * Set authorization to Beyonic API
-         */
-        function authorize_beyonic()
-        {
-            Beyonic::setApiVersion($this->beyonic_api_version);
-
-            if ($this->test_mode) {
-                Beyonic::setApiKey($this->live_api_key);
-            } else {
-                Beyonic::setApiKey($this->live_api_key);
             }
         }
 
