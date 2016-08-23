@@ -13,6 +13,8 @@
 if (!defined('ABSPATH'))
     exit; // Exit if accessed directly
 
+define('WPSP_NAME', 'beyonic-payment-gateway');
+
 add_action('plugins_loaded', 'beyonic', 0);
 require_once('vendor/beyonic/beyonic-php/lib/Beyonic.php');
 
@@ -21,7 +23,9 @@ function beyonic() {
         return; // if the WC payment gateway class is not available, do nothing
     if (class_exists('WC_Gateway_Beyonic'))
         return;
-    
+
+
+  
     class WC_Gateway_Beyonic extends WC_Payment_Gateway {
 
         public function __construct() {
@@ -38,6 +42,8 @@ function beyonic() {
             $this->live_api_key = $this->get_option('live_api_key');
             $this->description = $this->get_option('description');
             $this->test_mode = $this->get_option('test_mode');
+            $this->beyonic_api_version = 'v1';
+            $this->ipn_url = plugin_dir_url(__FILE__) . "reciver_beyonic_ipn.php";
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         }
 
@@ -86,7 +92,6 @@ function beyonic() {
             );
         }
 
-
         /**
          * Admin Panel Options
          * - Options for bits like 'api keys' and availability on a country-by-country basis
@@ -97,14 +102,14 @@ function beyonic() {
             ?>
             <h3><?php _e('Beyonic', 'woocommerce'); ?></h3>
             <p><?php _e('Please fill in the below section to start accepting payments on your site! You can find all the required information in your Beyonic Dashboard'); ?> </p>
-                <table class="form-table">
-                    <?php
-                    // Generate the HTML For the settings form.
-                    $this->generate_settings_html();
-                    ?>
-                </table><!--/.form-table-->
+            <table class="form-table">
+                <?php
+                // Generate the HTML For the settings form.
+                $this->generate_settings_html();
+                ?>
+            </table><!--/.form-table-->
 
-            <?php 
+            <?php
         }
 
         function process_payment($order_id) {
@@ -118,7 +123,8 @@ function beyonic() {
                 $last_name = $_POST['billing_last_name'];
                 $phon = $_POST['billing_phone'];
             }
-           
+
+
             $Webhook = $wpdb->get_var("
 		SELECT option_value FROM wp_options
                 WHERE option_name = 'Webhook'");
@@ -127,7 +133,7 @@ function beyonic() {
                 try {
                     $hooks = Beyonic_Webhook::create(array(
                                 "event" => "collection.received",
-                                "target" => plugin_dir_url(__FILE__)."reciver_beyonic_ipn.php"
+                                "target" => $this->ipn_url
                     ));
                     $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => 'Collection_recived'));
                 } catch (Exception $exc) {
@@ -136,6 +142,7 @@ function beyonic() {
             }
 
             try {
+
                 $request = Beyonic_Collection_Request::create(array(
                             "phonenumber" => $phon,
                             "first_name" => $first_name,
@@ -146,21 +153,27 @@ function beyonic() {
                             "currency" => "BXC",
                             "metadata" => array("order_id" => $order_id)
                 ));
-                $order->payment_complete();
+
+                $beyonic_collection_id = $request->id;
+
+                if (!empty($beyonic_collection_id)) {
+                    $order->payment_complete($beyonic_collection_id);
+                }
+
                 $order->update_status('pending');
                 return array(
                     'result' => 'success',
                     'redirect' => $this->get_return_url($order)
                 );
             } catch (Exception $exc) {
-                print_r($exc);
+                pr($exc);
                 die;
                 echo $exc->getTraceAsString();
             }
         }
 
         /**
-         * Generate the credit card payment form
+         * Generate payment form
          *
          * @access public
          * @param none
@@ -189,6 +202,8 @@ function beyonic() {
          */
         function authorize_beyonic()
         {
+            Beyonic::setApiVersion($this->beyonic_api_version);
+
             if ($this->test_mode) {
                 Beyonic::setApiKey($this->test_api_key);
             } else {
