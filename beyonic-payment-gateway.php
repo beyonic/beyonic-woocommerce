@@ -1,24 +1,27 @@
 <?php
 /**
  * Plugin Name: WooCommerce Beyonic Gateway
- * Plugin URI: http://techmarbles.com/
+ * Plugin URI: http://beyonic.com/
  * Description: Receive payments using the Beyonic.
- * Author: Manish gautam
- * Author URI: http://woothemes.com/
- * Version: 1.3.1
- *
- * 
- * 
+ * Author: beyonic
+ * Author URI: http://beyonic.com/
+ * Version: 1.0.0
  */
 if (!defined('ABSPATH'))
     exit; // Exit if accessed directly
 
 define('WPSP_NAME', 'beyonic-payment-gateway');
 
-add_action('plugins_loaded', 'beyonic', 0);
+add_action('init', 'beyonic');
 require_once('vendor/beyonic/beyonic-php/lib/Beyonic.php');
 
 function beyonic() {
+
+    if (!empty($_GET['beyonic_ipn']) && $_GET['beyonic_ipn'] == 1) {
+        require_once 'reciver_beyonic_ipn.php';
+        return;
+    }
+
     if (!class_exists('WC_Payment_Gateway'))
         return; // if the WC payment gateway class is not available, do nothing
     if (class_exists('WC_Gateway_Beyonic'))
@@ -39,7 +42,7 @@ function beyonic() {
             $this->api_key = $this->get_option('api_key');
             $this->description = $this->get_option('description');
             $this->beyonic_api_version = 'v1';
-            $this->ipn_url = plugin_dir_url(__FILE__) . "reciver_beyonic_ipn.php";
+            $this->ipn_url = site_url() . "?beyonic_ipn=1";
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         }
 
@@ -97,13 +100,13 @@ function beyonic() {
         function process_payment($order_id) {
             global $woocommerce, $wpdb;
             $order = new WC_Order($order_id);
-            Beyonic::setApiVersion($this->beyonic_api_version);
-            Beyonic::setApiKeypiKey($this->api_key);
+            $this->authorize_beyonic();
 
             if (!empty($_POST['billing_first_name'])) {
-                $first_name = $_POST['billing_first_name'];
-                $last_name = $_POST['billing_last_name'];
-                $phon = $_POST['billing_phone'];
+                $first_name = sanitize_text_field($_POST['billing_first_name']);
+                $last_name = sanitize_text_field($_POST['billing_last_name']);
+                $phon = intval($_POST['billing_phone']);
+                $order_total = intval($order->get_total());
             }
 
 
@@ -117,7 +120,7 @@ function beyonic() {
                                 "event" => "collection.received",
                                 "target" => $this->ipn_url
                     ));
-                    $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => 'Collection_recived'));
+                    $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => $this->ipn_url));
                 } catch (Exception $exc) {
                     echo $exc->getTraceAsString();
                 }
@@ -129,14 +132,14 @@ function beyonic() {
                             "phonenumber" => $phon,
                             "first_name" => $first_name,
                             "last_name" => $last_name,
-                            "amount" => $order->get_total(),
+                            "amount" => $order_total,
                             "success_message" => 'Thank you for your payment!',
                             "send_instructions" => true,
                             "currency" => "BXC",
                             "metadata" => array("order_id" => $order_id)
                 ));
 
-                $beyonic_collection_id = $request->id;
+                $beyonic_collection_id = intval($request->id);
 
                 if (!empty($beyonic_collection_id)) {
                     $order->payment_complete($beyonic_collection_id);
@@ -152,6 +155,11 @@ function beyonic() {
             }
         }
 
+        function authorize_beyonic() {
+            Beyonic::setApiVersion($this->beyonic_api_version);
+            Beyonic::setApiKey($this->api_key);
+        }
+
         /**
          * Generate payment form
          *
@@ -164,7 +172,7 @@ function beyonic() {
             global $woocommerce;
             $plugin_dir = plugin_dir_url(__FILE__);
             // Description of payment method from settingsp
-            if ($this->description) {
+            if (!empty($this->description)) {
                 echo "<p>" . $this->description . "</p>";
             }
         }
