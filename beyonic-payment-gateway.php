@@ -15,6 +15,14 @@ define('WPSP_NAME', 'beyonic-payment-gateway');
 add_action('init', 'beyonic');
 require_once('vendor/beyonic/beyonic-php/lib/Beyonic.php');
 
+register_deactivation_hook(__FILE__, 'myplugin_deactivate');
+
+function myplugin_deactivate() {
+    global $wpdb;
+    $sql = $wpdb->query('DELETE FROM wp_options
+        WHERE option_name= "Webhook"');
+}
+
 function beyonic() {
 
     if (!empty($_GET['beyonic_ipn']) && $_GET['beyonic_ipn'] == 1) {
@@ -44,6 +52,7 @@ function beyonic() {
             $this->beyonic_api_version = 'v1';
             $this->ipn_url = site_url() . "?beyonic_ipn=1";
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
+            add_action('admin_notices', array($this, 'beyonic_custom_admin_notice'));
         }
 
         /**
@@ -102,49 +111,55 @@ function beyonic() {
             $order = new WC_Order($order_id);
             $this->authorize_beyonic();
 
-            if (!empty($_POST['billing_first_name'])) {
-                $first_name = sanitize_text_field($_POST['billing_first_name']);
-                $last_name = sanitize_text_field($_POST['billing_last_name']);
-                $phon = intval($_POST['billing_phone']);
-                $order_total = intval($order->get_total());
+            if (isset($_POST['billing_first_name']) && !empty($_POST['billing_first_name'])) {
+                $billing_first_name = sanitize_text_field($_POST['billing_first_name']);
+            } else {
+                $billing_first_name = "";
+            }
+            if (isset($_POST['billing_last_name']) && !empty($_POST['billing_last_name'])) {
+                $billing_last_name = sanitize_text_field($_POST['billing_last_name']);
+            } else {
+                $billing_last_name = "";
             }
 
+            if (isset($_POST['billing_phone']) && !empty($_POST['billing_phone'])) {
+                $billing_phone = sanitize_text_field($_POST['billing_phone']);
+            } else {
+                $billing_phone = "";
+            }
+            $order_total = $order->get_total();
 
             $Webhook = $wpdb->get_var("
 		SELECT option_value FROM wp_options
                 WHERE option_name = 'Webhook'");
-
             if (empty($Webhook)) {
+                  $url = str_replace("http", "https", $this->ipn_url);
                 try {
                     $hooks = Beyonic_Webhook::create(array(
                                 "event" => "collection.received",
-                                "target" => $this->ipn_url
+                                "target" => $url
                     ));
-                    $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => $this->ipn_url));
+                    $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => Collection_recived));
                 } catch (Exception $exc) {
                     echo $exc->getTraceAsString();
                 }
             }
 
             try {
-
                 $request = Beyonic_Collection_Request::create(array(
-                            "phonenumber" => $phon,
-                            "first_name" => $first_name,
-                            "last_name" => $last_name,
+                            "phonenumber" => $billing_phone,
+                            "first_name" => $billing_first_name,
+                            "last_name" => $billing_last_name,
                             "amount" => $order_total,
                             "success_message" => 'Thank you for your payment!',
                             "send_instructions" => true,
                             "currency" => "BXC",
                             "metadata" => array("order_id" => $order_id)
                 ));
-
                 $beyonic_collection_id = intval($request->id);
-
                 if (!empty($beyonic_collection_id)) {
                     $order->payment_complete($beyonic_collection_id);
                 }
-
                 $order->update_status('pending');
                 return array(
                     'result' => 'success',
@@ -175,6 +190,17 @@ function beyonic() {
             if (!empty($this->description)) {
                 echo "<p>" . $this->description . "</p>";
             }
+        }
+
+        /**
+         * Generate admin notice
+         */
+        public function beyonic_custom_admin_notice() {
+            ?>
+            <div id="message" class="notice notice-error is-dismissible">
+                <p>https must be enabled to use beyonic payments.</p>
+            </div>
+            <?php
         }
 
     }
