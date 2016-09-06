@@ -112,18 +112,18 @@ function beyonic() {
             $this->authorize_beyonic();
 
             if (isset($_POST['billing_first_name']) && !empty($_POST['billing_first_name'])) {
-                $billing_first_name = sanitize_text_field($_POST['billing_first_name']);
+                $billing_first_name = esc_sql(sanitize_text_field($_POST['billing_first_name']));
             } else {
                 $billing_first_name = "";
             }
             if (isset($_POST['billing_last_name']) && !empty($_POST['billing_last_name'])) {
-                $billing_last_name = sanitize_text_field($_POST['billing_last_name']);
+                $billing_last_name = esc_sql(sanitize_text_field($_POST['billing_last_name']));
             } else {
                 $billing_last_name = "";
             }
 
             if (isset($_POST['billing_phone']) && !empty($_POST['billing_phone'])) {
-                $billing_phone = sanitize_text_field($_POST['billing_phone']);
+                $billing_phone = esc_sql(sanitize_text_field($_POST['billing_phone']));
             } else {
                 $billing_phone = "";
             }
@@ -145,6 +145,9 @@ function beyonic() {
                 }
             }
 
+           
+            
+            
             try {
                 $request = Beyonic_Collection_Request::create(array(
                             "phonenumber" => $billing_phone,
