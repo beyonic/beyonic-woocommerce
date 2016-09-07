@@ -20,7 +20,7 @@ register_deactivation_hook(__FILE__, 'myplugin_deactivate');
 function myplugin_deactivate() {
     global $wpdb;
     $strQuery = "DELETE FROM wp_options WHERE option_name= %s";
-	$wpdb->query($wpdb->prepare( $strQuery, "Webhook"));
+    $wpdb->query($wpdb->prepare($strQuery, "Webhook"));
 }
 
 function beyonic() {
@@ -36,6 +36,13 @@ function beyonic() {
         return;
 
     class WC_Gateway_Beyonic extends WC_Payment_Gateway {
+
+        public $allowed_currency = array(
+            'BXC',
+            'KES',
+            'UGX',
+            'TEST',
+        );
 
         public function __construct() {
             $plugin_dir = plugin_dir_url(__FILE__);
@@ -78,7 +85,7 @@ function beyonic() {
                 'api_key' => array(
                     'title' => __('Api Key', 'woocommerce'),
                     'type' => 'text',
-                    'description' => __('Please enter your test open key (you can get it from your Beyonic).', 'woocommerce'),
+                    'description' => __('Please enter your api key (you can get it from your Beyonic).', 'woocommerce'),
                     'default' => '',
                     'desc_tip' => true,
                     'placeholder' => ''
@@ -93,17 +100,24 @@ function beyonic() {
          * @since 1.0.0
          */
         public function admin_options() {
-            ?>
-            <h3><?php _e('Beyonic', 'woocommerce'); ?></h3>
-            <p><?php _e('Please fill in the below section to start accepting payments on your site! You can find all the required information in your Beyonic Dashboard'); ?> </p>
-            <table class="form-table">
-                <?php
-                // Generate the HTML For the settings form.
-                $this->generate_settings_html();
+            $store_currency = get_option('woocommerce_currency');
+            if (in_array($store_currency, $this->allowed_currency)) {
                 ?>
-            </table><!--/.form-table-->
+                <h3><?php _e('Beyonic', 'woocommerce'); ?></h3>
+                <p><?php _e('Please fill in the below section to start accepting payments on your site! You can find all the required information in your Beyonic Dashboard'); ?> </p>
+                <table class="form-table">
+                    <?php
+                    // Generate the HTML For the settings form.
+                    $this->generate_settings_html();
+                    ?>
+                </table><!--/.form-table-->
 
-            <?php
+                <?php
+            } else {
+                ?>
+                <div class="inline error below-h2"><p><strong>Gateway Disabled</strong>: Beyonic does not support your store currency.</p></div>
+                <?php
+            }
         }
 
         function process_payment($order_id) {
@@ -111,70 +125,87 @@ function beyonic() {
             $order = new WC_Order($order_id);
             $this->authorize_beyonic();
 
-            if (isset($_POST['billing_first_name']) && !empty($_POST['billing_first_name'])) {
-                $billing_first_name = esc_sql(sanitize_text_field($_POST['billing_first_name']));
-            } else {
-                $billing_first_name = "";
-            }
-            if (isset($_POST['billing_last_name']) && !empty($_POST['billing_last_name'])) {
-                $billing_last_name = esc_sql(sanitize_text_field($_POST['billing_last_name']));
-            } else {
-                $billing_last_name = "";
+            // Phone number validation
+            if (!preg_match('/^\+\d{6,12}$/', $order->billing_phone)) {
+                $notice = 'Please make sure your phone number is in international format, starting with a + sign';
+
+                if (function_exists("wc_add_notice")) {
+                    // Use the new version of the add_error method
+                    wc_add_notice($notice, 'error');
+                } else {
+                    // Use the old version
+                    $woocommerce->add_error($notice);
+                }
+                return;
             }
 
-            if (isset($_POST['billing_phone']) && !empty($_POST['billing_phone'])) {
-                $billing_phone = esc_sql(sanitize_text_field($_POST['billing_phone']));
-            } else {
-                $billing_phone = "";
-            }
-            $order_total = $order->get_total();
+            $Webhook = $wpdb->get_var("'Webhook'");
+            $meta_key = 'Webhook';
+            $Webhook = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM wp_options WHERE option_name = %s", $meta_key));
 
-            $Webhook = $wpdb->get_var("
-	 'Webhook'");
-                $meta_key = 'Webhook';
-			$Webhook = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM wp_options WHERE option_name = %s", $meta_key));
             if (empty($Webhook)) {
-                  $url = str_replace("http", "https", $this->ipn_url);
+                $url = str_replace("http", "https", $this->ipn_url);
                 try {
                     $hooks = Beyonic_Webhook::create(array(
                                 "event" => "collection.received",
-                                "target" => $url
+                                "target" => $this->ipn_url
                     ));
-                    
+
                     $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => 'Collection_recived'));
                 } catch (Exception $exc) {
-                    echo $exc->getTraceAsString();
+                    $notice = $exc->responseBody;
+
+                    if (function_exists("wc_add_notice")) {
+                        // Use the new version of the add_error method
+                        wc_add_notice($notice, 'error');
+                    } else {
+                        // Use the old version
+                        $woocommerce->add_error($notice);
+                    }
+                    return;
                 }
             }
 
-           
-            
-            
             try {
                 $request = Beyonic_Collection_Request::create(array(
-                            "phonenumber" => $billing_phone,
-                            "first_name" => $billing_first_name,
-                            "last_name" => $billing_last_name,
-                            "amount" => $order_total,
+                            "phonenumber" => $order->billing_phone,
+                            "first_name" => $order->billing_first_name,
+                            "last_name" => $order->billing_last_name,
+                            "amount" => $order->get_total(),
                             "success_message" => 'Thank you for your payment!',
                             "send_instructions" => true,
-                            "currency" => "BXC",
+                            "currency" => $order->get_order_currency(),
                             "metadata" => array("order_id" => $order_id)
                 ));
+
                 $beyonic_collection_id = intval($request->id);
+
                 if (!empty($beyonic_collection_id)) {
                     $order->payment_complete($beyonic_collection_id);
                 }
+
                 $order->update_status('pending');
                 return array(
                     'result' => 'success',
                     'redirect' => $this->get_return_url($order)
                 );
             } catch (Exception $exc) {
-                echo $exc->getTraceAsString();
+                // If function should we use?
+                $notice = $exc->responseBody;
+
+                if (function_exists("wc_add_notice")) {
+                    // Use the new version of the add_error method
+                    wc_add_notice($notice, 'error');
+                } else {
+                    // Use the old version
+                    $woocommerce->add_error($notice);
+                }
             }
         }
 
+        /**
+         * Authorize beyonic gateway
+         */
         function authorize_beyonic() {
             Beyonic::setApiVersion($this->beyonic_api_version);
             Beyonic::setApiKey($this->api_key);
