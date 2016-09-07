@@ -141,7 +141,7 @@ function beyonic() {
                                 "target" => $url
                     ));
                     
-                    $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => Collection_recived));
+                    $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => 'Collection_recived'));
                 } catch (Exception $exc) {
                     echo $exc->getTraceAsString();
                 }
