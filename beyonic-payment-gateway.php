@@ -19,8 +19,8 @@ register_deactivation_hook(__FILE__, 'myplugin_deactivate');
 
 function myplugin_deactivate() {
     global $wpdb;
-    $sql = $wpdb->query('DELETE FROM wp_options
-        WHERE option_name= "Webhook"');
+    $strQuery = "DELETE FROM wp_options WHERE option_name= %s";
+	$wpdb->query($wpdb->prepare( $strQuery, "Webhook"));
 }
 
 function beyonic() {
@@ -130,8 +130,9 @@ function beyonic() {
             $order_total = $order->get_total();
 
             $Webhook = $wpdb->get_var("
-		SELECT option_value FROM wp_options
-                WHERE option_name = 'Webhook'");
+	 'Webhook'");
+                $meta_key = 'Webhook';
+			$Webhook = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM wp_options WHERE option_name = %s", $meta_key));
             if (empty($Webhook)) {
                   $url = str_replace("http", "https", $this->ipn_url);
                 try {
@@ -139,6 +140,7 @@ function beyonic() {
                                 "event" => "collection.received",
                                 "target" => $url
                     ));
+                    
                     $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => Collection_recived));
                 } catch (Exception $exc) {
                     echo $exc->getTraceAsString();
