@@ -1,6 +1,7 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
+if (!defined('ABSPATH'))
+    exit; // Exit if accessed directly
+    
 global $woocommerce;
 $responce = json_decode(file_get_contents("php://input"));
 if (!empty($responce)) {
