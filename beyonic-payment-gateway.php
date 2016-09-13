@@ -10,20 +10,21 @@
 if (!defined('ABSPATH'))
     exit; // Exit if accessed directly
 
-define('WPSP_NAME', 'beyonic-payment-gateway');
+define('BEYONIC_WOO_GW_WPSP_NAME', 'beyonic-payment-gateway');
 
-add_action('init', 'beyonic');
+add_action('init', 'beyonic_woo_gw_beyonic');
+
 require_once('vendor/beyonic/beyonic-php/lib/Beyonic.php');
 
-register_deactivation_hook(__FILE__, 'myplugin_deactivate');
+register_deactivation_hook(__FILE__, 'beyonic_woo_gw_deactivate');
 
-function myplugin_deactivate() {
+function beyonic_woo_gw_deactivate() {
     global $wpdb;
     $strQuery = "DELETE FROM wp_options WHERE option_name= %s";
     $wpdb->query($wpdb->prepare($strQuery, "Webhook"));
 }
 
-function beyonic() {
+function beyonic_woo_gw_beyonic() {
 
     if (!empty($_GET['beyonic_ipn']) && $_GET['beyonic_ipn'] == 1) {
         require_once 'reciver_beyonic_ipn.php';
@@ -32,10 +33,10 @@ function beyonic() {
 
     if (!class_exists('WC_Payment_Gateway'))
         return; // if the WC payment gateway class is not available, do nothing
-    if (class_exists('WC_Gateway_Beyonic'))
+    if (class_exists('BEYONIC_WOO_GW'))
         return;
 
-    class WC_Gateway_Beyonic extends WC_Payment_Gateway {
+    class BEYONIC_WOO_GW extends WC_Payment_Gateway {
 
         public $allowed_currency = array(
             'BXC',
@@ -59,7 +60,7 @@ function beyonic() {
             $this->beyonic_api_version = 'v1';
             $this->ipn_url = site_url() . "?beyonic_ipn=1";
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-            add_action('admin_notices', array($this, 'beyonic_custom_admin_notice'));
+            add_action('admin_notices', array($this, 'beyonic_woo_gw_beyonic_custom_admin_notice'));
         }
 
         /**
@@ -123,7 +124,7 @@ function beyonic() {
         function process_payment($order_id) {
             global $woocommerce, $wpdb;
             $order = new WC_Order($order_id);
-            $this->authorize_beyonic();
+            $this->beyonic_woo_gw_authorize_beyonic();
 
             // Phone number validation
             if (!preg_match('/^\+\d{6,12}$/', $order->billing_phone)) {
@@ -148,7 +149,7 @@ function beyonic() {
                 try {
                     $hooks = Beyonic_Webhook::create(array(
                                 "event" => "collection.received",
-                                "target" => $this->ipn_url
+                                "target" => $url
                     ));
 
                     $wpdb->insert('wp_options', array('option_name' => 'Webhook', 'option_value' => 'Collection_recived'));
@@ -190,9 +191,9 @@ function beyonic() {
                     'redirect' => $this->get_return_url($order)
                 );
             } catch (Exception $exc) {
-                // If function should we use?
                 $notice = $exc->responseBody;
-
+               
+                // If function should we use?
                 if (function_exists("wc_add_notice")) {
                     // Use the new version of the add_error method
                     wc_add_notice($notice, 'error');
@@ -206,7 +207,7 @@ function beyonic() {
         /**
          * Authorize beyonic gateway
          */
-        function authorize_beyonic() {
+        function beyonic_woo_gw_authorize_beyonic() {
             Beyonic::setApiVersion($this->beyonic_api_version);
             Beyonic::setApiKey($this->api_key);
         }
@@ -231,7 +232,7 @@ function beyonic() {
         /**
          * Generate admin notice
          */
-        public function beyonic_custom_admin_notice() {
+        public function beyonic_woo_gw_beyonic_custom_admin_notice() {
             ?>
             <div id="message" class="notice notice-error is-dismissible">
                 <p>https must be enabled to use beyonic payments.</p>
@@ -244,10 +245,10 @@ function beyonic() {
     /**
      * Add the gateway to WooCommerce
      * */
-    function add_beyonic_gateway($methods) {
-        $methods[] = 'WC_Gateway_Beyonic';
+    function beyonic_woo_gw_add($methods) {
+        $methods[] = 'BEYONIC_WOO_GW';
         return $methods;
     }
 
-    add_filter('woocommerce_payment_gateways', 'add_beyonic_gateway');
+    add_filter('woocommerce_payment_gateways', 'beyonic_woo_gw_add');
 }

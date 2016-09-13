@@ -36,7 +36,7 @@ class BPG_Payment_Tests extends WP_UnitTestCase {
     );
 
     public function test_constants() {
-        $this->assertSame('beyonic-payment-gateway', WPSP_NAME);
+        $this->assertSame('beyonic-payment-gateway', BEYONIC_WOO_GW_WPSP_NAME);
     }
 
     function test_beyonic_keys() {
@@ -83,7 +83,7 @@ class BPG_Payment_Tests extends WP_UnitTestCase {
         $this->assertEquals($create, $retrive);
     }
 
-    function test_invalid_phon_number() { 
+    function test_invalid_phone_number() { 
         Beyonic::setApiKey($this->beyonic_key);
         try {
             $createCollection = Beyonic_Collection_Request::create($this->Wrong_collection_request);
@@ -93,11 +93,4 @@ class BPG_Payment_Tests extends WP_UnitTestCase {
         }
     } 
 
-//
-//    function test_order_status_change() {
-//
-//        $order = new WC_Order();
-//        pr($order);
-//        die;
-//    } 
 }
