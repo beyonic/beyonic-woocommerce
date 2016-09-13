@@ -10,8 +10,8 @@ if (!empty($responce)) {
     $event = $hook->event;
     if ($event == 'collection.received') {
         //get order id from collection request
-        $wc_beyonic = new BEYONIC_WOO_GW();
-        $wc_beyonic->beyonic_woo_gw_authorize_beyonic();
+        $wc_beyonic = new Beyonic_Woo_Gw();
+        $wc_beyonic->authorize_beyonic_gw();
         $collection_request = Beyonic_Collection_Request::get($data->collection_request);
         $order_id = intval($collection_request->metadata->order_id);
         $status = sanitize_text_field($data->status);

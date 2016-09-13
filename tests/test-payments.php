@@ -36,7 +36,7 @@ class BPG_Payment_Tests extends WP_UnitTestCase {
     );
 
     public function test_constants() {
-        $this->assertSame('beyonic-payment-gateway', BEYONIC_WOO_GW_WPSP_NAME);
+        $this->assertSame('beyonic-payment-gateway', BEYONIC_WPSP_NAME);
     }
 
     function test_beyonic_keys() {
