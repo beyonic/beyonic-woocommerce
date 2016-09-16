@@ -1,4 +1,4 @@
-=== Woocommerce plugin for Beyonic ===
+=== Beyonic plugin for Woocommerce ===
 Contributors: beyonic
 Donate link: http://beyonic.com/
 Tags: payment gateway, beyonic
