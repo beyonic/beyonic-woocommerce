@@ -4,11 +4,11 @@ Donate link: http://beyonic.com/
 Tags: payment gateway, beyonic
 Requires at least: 3.0.1
 Tested up to: 4.0
-Stable tag: 1.1
+Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-This Plugin integrates Beyonic Payments with your woocommerce website. 
+This Plugin integrates Beyonic Payments with your woocommerce website.
 
 == Description ==
 
@@ -45,4 +45,9 @@ Yes, Curl is required.
 = 1.0 =
 * Included Beyonic.php file directly.
 * Moved files into vendor directory.
- 
+
+== Upgrade Notice ==
+
+= 1.0 =
+This is the first initial release. No upgrade is required.
+
