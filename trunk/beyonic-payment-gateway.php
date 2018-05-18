@@ -5,7 +5,7 @@
  * Description: Receive payments using the Beyonic.
  * Author: beyonic
  * Author URI: http://beyonic.com/
- * Version: 1.0.0
+ * Version: 2.0.0
  */
 if (!defined('ABSPATH'))
     exit; // Exit if accessed directly
@@ -24,19 +24,33 @@ function beyonic_woo_gw_deactivate() {
     $wpdb->query($wpdb->prepare($strQuery, "Beyonic_Webhook"));
 }
 
-function beyonic_woo_gw_init() {
+add_action( 'woocommerce_thankyou_order_received_text', 'woocommerce_thankyou_cheque_payment', 10, 2 );
 
+function woocommerce_thankyou_cheque_payment( $message,$order ){
+    $payment_method = $order->get_payment_method();
+	if($payment_method == 'beyonic'){
+		$phone = $order->get_billing_phone();
+
+		// SET your message below
+		echo $message.'<br><br><p style="color:red; font-weight:bold;">'.__( 'Note: Payment instructions have been sent to your phone "'.$phone.'". Please check your phone to complete the payment. Your order cannot be delivered until you complete you complete the payment on your phone.', 'woocommerce' ).'</p>';
+	}
+}
+
+function beyonic_woo_gw_init() {
+ 
     if (!empty($_GET['beyonic_ipn']) && $_GET['beyonic_ipn'] == 1) {
-        require_once 'beyonic-ipn-receiver.php';
+       
+     // print_r(__DIR__ .'/beyonic-ipn-receiver.php'); die;   
+        require_once __DIR__ .'/beyonic-ipn-receiver.php';    
         return;
-    }
+    } 
 
     if (!class_exists('WC_Payment_Gateway'))
         return; // if the WC payment gateway class is not available, do nothing
     if (class_exists('Beyonic_Woo_Gw'))
         return;
 
-    class Beyonic_Woo_Gw extends WC_Payment_Gateway {
+    class Beyonic_Woo_Gw extends WC_Payment_Gateway { 
 
         public $allowed_currency = array(
             'BXC',
@@ -45,7 +59,7 @@ function beyonic_woo_gw_init() {
             'TEST',
         );
 
-        public function __construct() {
+        public function __construct() { 
             $plugin_dir = plugin_dir_url(__FILE__);
             global $woocommerce;
             $this->id = 'beyonic';
@@ -81,15 +95,15 @@ function beyonic_woo_gw_init() {
                 ),
                 'description' => array(
                     'title' => __('Description', 'woocommerce'),
-                    'type' => 'text',
+                    'type' => 'textarea',
                     'description' => __('This description will be shown on your checkout page.', 'woocommerce'),
-                    'default' => __('Use mobile money from MPESA, MTN or AIRTEL to pay for your order! <a target="_blank" href = "https://beyonic.com" > Powered by Beyonic payments </a>.', 'using Beyonic', 'woocommerce'),
+                    'default' => __('Use mobile money from MPESA, MTN, AIRTEL or other networks to pay for your order! <a href="https://beyonic.com" target="_blank">Powered by Beyonic Payments</a>.', 'using Beyonic', 'woocommerce'),  
                     'desc_tip' => true,
                 ),
                 'notification_url' => array(
                     'title' => __('Callback notification URL', 'woocommerce'),
-                    'type' => 'text',
-                    'description' => __("This is the notification URL that will be used to send payment notifications to your website. You do not need to change it.NOTE:It must start with 'https'. If it does'n start with https, then that means that your website doesen't have a secure HTTPS certificate. ).", 'woocommerce'),
+                    'type' => 'text',  
+                    'description' => __("This is the notification URL that will be used to send payment notifications to your website. You do not need to change it. NOTE : It must start with 'https'. If it doesn't start with https, then that means that your website doesen't have a secure HTTPS certificate.", 'woocommerce'),
                     'default' => get_site_url() . '?beyonic_ipn=1',
                     'desc_tip' => true,
                     'custom_attributes' => array('readonly' => 'readonly')
@@ -152,20 +166,25 @@ function beyonic_woo_gw_init() {
         }
 
         $webhook = $wpdb->get_var("'Beyonic_Webhook'");
+       
         $meta_key = 'Beyonic_Webhook';
+       
         $webhook = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM wp_options WHERE option_name = %s", $meta_key));
 
         if (empty($webhook)) {
-            $url = str_replace("http", "https", $this->ipn_url); 
-            try { 
+
+            $url = str_replace("http:", "https:", $this->ipn_url);   
+
+            try {  
                 $hooks = Beyonic_Webhook::create(array(
                     "event" => "collection.received",
-                    "target" => $url
+                    "target" => "$url"
                 ));
 
                 $wpdb->insert('wp_options', array('option_name' => 'Beyonic_Webhook', 'option_value' => 'Collection_received'));
-            } catch (Exception $exc) { 
 
+            } catch (Exception $exc) {
+             
                 $notice = json_decode($exc->responseBody);  
 
                 if (function_exists("wc_add_notice")) {
@@ -177,9 +196,10 @@ function beyonic_woo_gw_init() {
                 }
                 return;
             }
-        }     
+        }    
 
         try {
+
             $request = Beyonic_Collection_Request::create(array(
                 "phonenumber" => $order->billing_phone,
                 "first_name" => $order->billing_first_name,
@@ -193,7 +213,7 @@ function beyonic_woo_gw_init() {
 
             $beyonic_collection_id = intval($request->id);
 
-            if (!empty($beyonic_collection_id)) {
+            if (!empty($beyonic_collection_id)) { 
                 $order->payment_complete($beyonic_collection_id);
             }
 
@@ -223,7 +243,7 @@ function beyonic_woo_gw_init() {
         function authorize_beyonic_gw() {
             Beyonic::setApiVersion($this->beyonic_api_version);
             Beyonic::setApiKey($this->api_key);
-        }
+        } 
 
         /**
          * Generate payment form
@@ -240,7 +260,7 @@ function beyonic_woo_gw_init() {
             if (!empty($this->description)) {
                 echo "<p>" . $this->description . "</p>";
             }
-        }
+        } 
 
         /**
          * Generate admin notice
@@ -252,11 +272,11 @@ function beyonic_woo_gw_init() {
             </div>
             <?php
 
-            if(empty($this->api_key)) { ?>  
+            if(empty($this->api_key)) { ?>
             <div id="message" class="notice notice-warning is-dismissible">
                 <p> Beyonic is almost ready. To get started, <a target="_blank" href = "https://app.beyonic.com/signup/"> set your Beyonic account key </a> </p>
             </div>
-            <?php }   
+            <?php } 
         }
 
     }
