@@ -4,7 +4,7 @@ Donate link: http://beyonic.com/
 Tags: payment gateway, beyonic
 Requires at least: 3.0.1
 Tested up to: 4.9.6
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ This Plugin integrates Beyonic Payments with your woocommerce website.
 
 == Description ==
 
-Beyonic enables mobile payments for your website. With this plugin, your customers can pay using Mobile Money from many mobile money networks including MPESA, MTN, AIRTEL, VODACOM and many other. See https://beyonic.com for a full list of supported mobile money networks and signup for a Beyonic account to get started!
+Beyonic enables mobile payments for your website. With this plugin, your customers can pay using Mobile Money from many mobile money networks including M-Pesa, MTN Mobile Money, Airtle Money, Vodacom and many others. See https://beyonic.com for a full list of supported mobile money networks and signup for a Beyonic account to get started!
 
 == Installation ==
 
