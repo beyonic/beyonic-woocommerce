@@ -32,7 +32,7 @@ function woocommerce_thankyou_cheque_payment( $message,$order ){
 		$phone = $order->get_billing_phone();
 
 		// SET your message below
-		echo $message.'<br><br><p style="color:red; font-weight:bold;">'.__( 'Note: Payment instructions have been sent to your phone "'.$phone.'". Please check your phone to complete the payment. Your order cannot be delivered until you complete you complete the payment on your phone.', 'woocommerce' ).'</p>';
+		echo $message.'<br><br><p style="color:red; font-weight:bold;">'.__( 'Note: Payment instructions have been sent to your phone "'.$phone.'". Please check your phone to complete the payment. Your order cannot be delivered until you complete the payment on your phone.', 'woocommerce' ).'</p>';
 	}
 }
 
