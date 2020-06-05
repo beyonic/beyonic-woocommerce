@@ -152,7 +152,7 @@ function beyonic_woo_gw_init() {
          $this->authorize_beyonic_gw();
 
             // Phone number validation
-         if (!preg_match('/^\+\d{6,12}$/', $order->billing_phone)) {     
+         if (!preg_match('/^\+\d{6,12}$/', $order->get_billing_phone())) {     
             $notice = 'Please make sure your phone number is in international format, starting with a + sign';
 
             if (function_exists("wc_add_notice")) {
@@ -201,13 +201,13 @@ function beyonic_woo_gw_init() {
         try {
 
             $request = Beyonic_Collection_Request::create(array(
-                "phonenumber" => $order->billing_phone,
-                "first_name" => $order->billing_first_name,
-                "last_name" => $order->billing_last_name,
+                "phonenumber" => $order->get_billing_phone(),
+                "first_name" => $order->get_billing_first_name(),
+                "last_name" => $order->get_billing_last_name(),
                 "amount" => $order->get_total(),
                 "success_message" => 'Thank you for your payment!',
                 "send_instructions" => true,
-                "currency" => $order->get_order_currency(),
+                "currency" => $order->get_currency(),
                 "metadata" => array("order_id" => $order_id)
             ));
 
