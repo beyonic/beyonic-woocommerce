@@ -207,7 +207,7 @@ function beyonic_woo_gw_init() {
                 "amount" => $order->get_total(),
                 "success_message" => 'Thank you for your payment!',
                 "send_instructions" => true,
-                "currency" => $order->get_order_currency(),
+                "currency" => $order->get_currency(),
                 "metadata" => array("order_id" => $order_id)
             ));
 
