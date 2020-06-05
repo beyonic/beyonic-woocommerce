@@ -202,8 +202,8 @@ function beyonic_woo_gw_init() {
 
             $request = Beyonic_Collection_Request::create(array(
                 "phonenumber" => $order->get_billing_phone(),
-                "first_name" => $order->billing_first_name,
-                "last_name" => $order->billing_last_name,
+                "first_name" => $order->get_billing_first_name(),
+                "last_name" => $order->get_billing_last_name(),
                 "amount" => $order->get_total(),
                 "success_message" => 'Thank you for your payment!',
                 "send_instructions" => true,
