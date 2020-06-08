@@ -165,8 +165,6 @@ function beyonic_woo_gw_init() {
             return;
         }
 
-        $webhook = $wpdb->get_var("'Beyonic_Webhook'");
-       
         $meta_key = 'Beyonic_Webhook';
        
         $webhook = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $meta_key));
