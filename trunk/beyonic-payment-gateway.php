@@ -20,7 +20,7 @@ register_deactivation_hook(__FILE__, 'beyonic_woo_gw_deactivate');
 
 function beyonic_woo_gw_deactivate() {
     global $wpdb;
-    $strQuery = "DELETE FROM wp_options WHERE option_name= %s";
+    $strQuery = "DELETE FROM {$wpdb->options} WHERE option_name= %s";
     $wpdb->query($wpdb->prepare($strQuery, "Beyonic_Webhook"));
 }
 
@@ -165,11 +165,9 @@ function beyonic_woo_gw_init() {
             return;
         }
 
-        $webhook = $wpdb->get_var("'Beyonic_Webhook'");
-       
         $meta_key = 'Beyonic_Webhook';
        
-        $webhook = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM wp_options WHERE option_name = %s", $meta_key));
+        $webhook = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $meta_key));
 
         if (empty($webhook)) {
 
@@ -181,7 +179,7 @@ function beyonic_woo_gw_init() {
                     "target" => "$url"
                 ));
 
-                $wpdb->insert('wp_options', array('option_name' => 'Beyonic_Webhook', 'option_value' => 'Collection_received'));
+                $wpdb->insert($wpdb->options, array('option_name' => 'Beyonic_Webhook', 'option_value' => 'Collection_received'));
 
             } catch (Exception $exc) {
              
