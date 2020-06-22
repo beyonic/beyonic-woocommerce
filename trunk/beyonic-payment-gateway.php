@@ -37,13 +37,6 @@ function woocommerce_thankyou_cheque_payment( $message,$order ){
 }
 
 function beyonic_woo_gw_init() {
- 
-    if (!empty($_GET['beyonic_ipn']) && $_GET['beyonic_ipn'] == 1) {
-       
-     // print_r(__DIR__ .'/beyonic-ipn-receiver.php'); die;   
-        require_once __DIR__ .'/beyonic-ipn-receiver.php';    
-        return;
-    } 
 
     if (!class_exists('WC_Payment_Gateway'))
         return; // if the WC payment gateway class is not available, do nothing
@@ -288,4 +281,10 @@ function beyonic_woo_gw_init() {
     }
 
     add_filter('woocommerce_payment_gateways', 'add_beyonic_gw');
+    
+    if (!empty($_GET['beyonic_ipn']) && $_GET['beyonic_ipn'] == 1) {
+       
+        require_once __DIR__ .'/beyonic-ipn-receiver.php';    
+        return;
+    } 
 }
