@@ -12,7 +12,7 @@ if (!empty($responce)) {
         //get order id from collection request
         $wc_beyonic = new Beyonic_Woo_Gw();
         $wc_beyonic->authorize_beyonic_gw();
-        $collection_request = Beyonic_Collection_Request::get($data->collection_request);
+        $collection_request = Beyonic_Collection_Request::get($data->collection_request->id);
         $order_id = intval($collection_request->metadata->order_id);
         $status = sanitize_text_field($data->status);
         $order = new WC_Order($order_id);
