@@ -49,6 +49,7 @@ function beyonic_woo_gw_init() {
             'BXC',
             'KES',
             'UGX',
+            'TZS',
             'TEST',
         );
 
