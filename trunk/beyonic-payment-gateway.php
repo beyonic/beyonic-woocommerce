@@ -50,6 +50,7 @@ function beyonic_woo_gw_init() {
             'KES',
             'UGX',
             'TZS',
+            'RWF',
             'TEST',
         );
 
