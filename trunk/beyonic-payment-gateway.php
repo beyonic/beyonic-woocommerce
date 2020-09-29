@@ -145,7 +145,7 @@ function beyonic_woo_gw_init() {
          $this->authorize_beyonic_gw();
 
             // Phone number validation
-         if (!preg_match('/^\+\d{6,12}$/', $order->get_billing_phone())) {     
+         if (!preg_match('/^\+\d{6,12}$/', trim($order->get_billing_phone()))) {     
             $notice = 'Please make sure your phone number is in international format, starting with a + sign';
 
             if (function_exists("wc_add_notice")) {
