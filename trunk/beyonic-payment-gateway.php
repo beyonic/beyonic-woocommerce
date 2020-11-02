@@ -69,6 +69,20 @@ function beyonic_woo_gw_init() {
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
             add_action('admin_notices', array($this, 'beyonic_admin_notices'));
+            // add supports
+            $this->supports = array(
+                'subscriptions',
+                'products',
+                'subscription_cancellation', 
+                'subscription_suspension', 
+                'subscription_reactivation',
+                'subscription_amount_changes',
+                'subscription_date_changes',
+                'subscription_payment_method_change',
+                'subscription_payment_method_change_customer',
+                'subscription_payment_method_change_admin',
+                'multiple_subscriptions'
+            );
 
         }
 
