@@ -5,7 +5,7 @@
  * Description: Receive payments using the Beyonic.
  * Author: beyonic
  * Author URI: http://beyonic.com/
- * Version: 2.0.0
+ * Version: 2.0.13
  */
 if (!defined('ABSPATH'))
     exit; // Exit if accessed directly
@@ -49,6 +49,8 @@ function beyonic_woo_gw_init() {
             'BXC',
             'KES',
             'UGX',
+            'TZS',
+            'RWF',
             'TEST',
         );
 
@@ -63,6 +65,8 @@ function beyonic_woo_gw_init() {
             // Define user set variables
             $this->title = "Pay with Mobile Money"; 
             $this->api_key = $this->get_option('api_key');
+            $this->enable_custom_redirects = $this->get_option('enable_custom_redirects');
+            $this->post_checkout_page = $this->get_option('post_checkout_page');
             $this->description = $this->get_option('description');
             $this->beyonic_api_version = 'v1';
             $this->ipn_url = site_url() . "?beyonic_ipn=1";
@@ -78,7 +82,15 @@ function beyonic_woo_gw_init() {
          * @access public
          * @return void
          */
-        function init_form_fields() {
+        function init_form_fields()
+        {
+            // pull list of pages for page selector
+            $pages = get_pages();
+            $page_choices = array();
+            foreach ( $pages as $page ) {
+                //$page_choices[$page->post_title] = get_page_link( $page->ID );
+                $page_choices[$page->ID] = $page->post_title;
+            }
             $this->form_fields = array(
                 'enabled' => array(
                     'title' => __('Enable/Disable', 'woocommerce'),
@@ -108,6 +120,20 @@ function beyonic_woo_gw_init() {
                     'default' => '',
                     'desc_tip' => true,
                     'placeholder' => ''
+                ),
+                'enable_custom_redirects' => array(
+                    'title' => __('Enable/Disable Custom Post-Checkout', 'woocommerce'),
+                    'type' => 'checkbox',
+                    'description' => __('Enable a custom page to be shown after checkout', 'woocommerce'),
+                    'default' => 'no',
+                    'desc_tip' => true
+                ),
+                'post_checkout_page' => array(
+                    'title' => __('Post-Checkout Page', 'woocommerce'),
+                    'description' => __('The page that a user is taken to after checkout.', 'woocommerce'),
+                    'type' => 'select',
+                    'desc_tip' => true,
+                    'options' => $page_choices
                 )
             );
         }
@@ -139,14 +165,15 @@ function beyonic_woo_gw_init() {
             }
         }
 
-        function process_payment($order_id) {
-         global $woocommerce, $wpdb;
-         $order = new WC_Order($order_id);
-         $this->authorize_beyonic_gw();
-
-            // Phone number validation
-         if (!preg_match('/^\+\d{6,12}$/', $order->get_billing_phone())) {     
-            $notice = 'Please make sure your phone number is in international format, starting with a + sign';
+        function process_payment($order_id)
+        {
+            global $woocommerce, $wpdb;
+            $order = new WC_Order($order_id);
+            $this->authorize_beyonic_gw();
+   
+               // Phone number validation
+            if (!preg_match('/^\+\d{6,12}$/', trim($order->get_billing_phone()))) {     
+               $notice = 'Please make sure your phone number is in international format, starting with a + sign';
 
             if (function_exists("wc_add_notice")) {
                     // Use the new version of the add_error method
@@ -209,11 +236,27 @@ function beyonic_woo_gw_init() {
             }
 
             $order->update_status('pending');
-            return array(
-                'result' => 'success',
-                'redirect' => $this->get_return_url($order)
-            );
-        } catch (Exception $exc) { 
+            
+            //redirect depending on settings
+            if ($this->enable_custom_redirects == 'yes')
+            {
+                // send to custom page
+                return array(
+                    'result' => 'success',
+                    'redirect' => ($this->post_checkout_page . '&order_id=' . $order)
+                );
+            }
+            else
+            {
+                // redirect normally
+                return array(
+                    'result' => 'success',
+                    'redirect' => $this->get_return_url($order)
+                );
+            }
+        }
+        catch (Exception $exc)
+        { 
 
           $notice = json_decode($exc->responseBody);
 
@@ -282,8 +325,8 @@ function beyonic_woo_gw_init() {
 
     add_filter('woocommerce_payment_gateways', 'add_beyonic_gw');
     
-    if (!empty($_GET['beyonic_ipn']) && $_GET['beyonic_ipn'] == 1) {
-       
+    // catch incoming request from sasula
+    if (!empty($_GET['beyonic_ipn']) && $_GET['beyonic_ipn'] == 1) { 
         require_once __DIR__ .'/beyonic-ipn-receiver.php';    
         return;
     } 
